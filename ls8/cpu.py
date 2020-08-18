@@ -1,7 +1,7 @@
 """CPU functionality."""
 
 import sys
-
+from ipdb import set_trace as st
 
 class CPU:
     """Main CPU class."""
@@ -9,50 +9,51 @@ class CPU:
     def __init__(self):
         """Construct a new CPU."""
         self.ram = [0] * 256
+        self.reg = [0] * 8
         self.PC = 0
         self.IR = []
 
-    def ram_read(address: int):
+    def ram_read(self, address: int):
         return self.ram[address]
 
-    def ram_read(value, address: int):
+    def ram_write(value, address: int):
         self.ram[address] = value
 
-    def load(self, file_dir):
+    def load(self):
         """Load a program into memory."""
 
         address = 0
 
         # For now, we've just hardcoded a program:
 
-        # program = [
-        #     # From print8.ls8
-        #     0b10000010,  # LDI R0,8
-        #     0b00000000,
-        #     0b00001000,
-        #     0b01000111,  # PRN R0
-        #     0b00000000,
-        #     0b00000001,  # HLT
-        # ]
-        program = []
-        with open(file_dir) as file_obj:
-            program = file_obj.readlines()
+        program = [
+            # From print8.ls8
+            0b10000010,  # LDI R0,8
+            0b00000000,
+            0b00001000,
+            0b01000111,  # PRN R0
+            0b00000000,
+            0b00000001,  # HLT
+        ]
+        # program = []
+        # with open(file_dir) as file_obj:
+        #     program = file_obj.readlines()
 
         for instruction in program:
             self.ram[address] = instruction
             address += 1
 
     def LDI(self):
-        reg_num = self.ram[self.PC + 1]
         self.PC += 1
-        value = self.ram[self.PC + 2]
+        reg_num = self.ram_read(self.PC)
         self.PC += 1
-        self.ram[reg_num] = value
+        value = self.ram_read(self.PC)
+        self.reg[reg_num] = value
 
     def PRN(self):
-        reg_num = self.ram[self.PC + 1]
         self.PC += 1
-        print(self.ram[reg_num])
+        reg_num = self.ram_read(self.PC)
+        print(self.reg[reg_num])
 
     def HLT(self):
         exit()
@@ -73,12 +74,12 @@ class CPU:
         """
 
         print(f"TRACE: %02X | %02X %02X %02X |" % (
-            self.pc,
+            self.PC,
             # self.fl,
             # self.ie,
-            self.ram_read(self.pc),
-            self.ram_read(self.pc + 1),
-            self.ram_read(self.pc + 2)
+            self.ram_read(self.PC),
+            self.ram_read(self.PC + 1),
+            self.ram_read(self.PC + 2)
         ), end='')
 
         for i in range(8):
@@ -90,7 +91,9 @@ class CPU:
         """Run the CPU."""
         running = True
         while running:
-            ir = self.ram[self.PC]
+            # self.trace()
+            # st()
+            ir = self.ram_read(self.PC)
 
             if ir == 0b10000010:
                 self.LDI()
