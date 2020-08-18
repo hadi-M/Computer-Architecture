@@ -19,28 +19,29 @@ class CPU:
     def ram_write(value, address: int):
         self.ram[address] = value
 
-    def load(self):
+    def load(self, file_dir):
         """Load a program into memory."""
 
         address = 0
 
         # For now, we've just hardcoded a program:
 
-        program = [
-            # From print8.ls8
-            0b10000010,  # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111,  # PRN R0
-            0b00000000,
-            0b00000001,  # HLT
-        ]
-        # program = []
-        # with open(file_dir) as file_obj:
-        #     program = file_obj.readlines()
+        # program = [
+        #     # From print8.ls8
+        #     0b10000010,  # LDI R0,8
+        #     0b00000000,
+        #     0b00001000,
+        #     0b01000111,  # PRN R0
+        #     0b00000000,
+        #     0b00000001,  # HLT
+        # ]
+        program = []
+        with open(file_dir) as file_obj:
+            program = file_obj.readlines()
 
         for instruction in program:
             self.ram[address] = instruction
+            # st()
             address += 1
 
     def LDI(self):
