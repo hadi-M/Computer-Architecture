@@ -1,6 +1,7 @@
 """CPU functionality."""
 
 import sys
+import re
 from ipdb import set_trace as st
 
 class CPU:
@@ -35,13 +36,15 @@ class CPU:
         #     0b00000000,
         #     0b00000001,  # HLT
         # ]
-        program = []
+        # program = []
         with open(file_dir) as file_obj:
-            program = file_obj.readlines()
+            program_txt = "".join(file_obj.readlines())
+
+        program = re.findall("[0,1]{8}", program_txt)
 
         for instruction in program:
-            self.ram[address] = instruction
-            # st()
+            # self.ram[address] = '0b' + instruction
+            self.ram[address] = int(instruction, 2)
             address += 1
 
     def LDI(self):
@@ -64,6 +67,9 @@ class CPU:
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
+
+        elif op == "MUL":
+            self.reg[reg_a] *= self.reg[reg_b]
         # elif op == "SUB": etc
         else:
             raise Exception("Unsupported ALU operation")
@@ -93,9 +99,9 @@ class CPU:
         running = True
         while running:
             # self.trace()
-            # st()
             ir = self.ram_read(self.PC)
 
+            # st()
             if ir == 0b10000010:
                 self.LDI()
 
@@ -110,3 +116,9 @@ class CPU:
                 self.HLT()
 
                 self.PC += 1
+
+            if ir == 0b10100010:
+                self.MUL()
+
+                self.PC += 1
+            
