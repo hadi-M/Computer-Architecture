@@ -12,7 +12,8 @@ class CPU:
         self.ram = [0] * 256
         self.reg = [0] * 8
         self.PC = 0
-        self.IR = []
+        self.IR = 0
+        self.SP = 0xff
 
     def ram_read(self, address: int):
         return self.ram[address]
@@ -61,6 +62,35 @@ class CPU:
 
     def HLT(self):
         exit()
+
+    def PUSH(self):
+        self.PC += 1
+
+        reg_num = self.ram[self.PC]
+        value = self.reg[reg_num]
+        top_of_stack_addr = self.SP
+        self.ram[top_of_stack_addr] = value
+        
+        self.SP -= 1
+
+    def POP(self):
+        # st()
+        self.PC += 1
+        self.SP += 1
+
+        reg_num = self.ram[self.PC]
+        # top_of_stack_addr = self.reg[self.SP]
+        top_of_stack_addr = self.SP
+        value = self.ram[top_of_stack_addr]
+        self.reg[reg_num] = value
+
+
+    def MUL(self):
+        self.PC += 1
+        reg_num_1 = self.ram_read(self.PC)
+        self.PC += 1
+        reg_num_2 = self.ram_read(self.PC)
+        self.alu("MUL", reg_num_1, reg_num_2)
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
@@ -122,3 +152,12 @@ class CPU:
 
                 self.PC += 1
             
+            if ir == 0b01000101:
+                self.PUSH()
+
+                self.PC += 1
+
+            if ir == 0b01000110:
+                self.POP()
+
+                self.PC += 1
