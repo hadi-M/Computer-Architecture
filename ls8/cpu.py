@@ -14,6 +14,11 @@ class CPU:
         self.PC = 0
         self.IR = 0
         self.SP = 0xff # next empty slot (top of stack)
+        self.flags = {
+            "E": 0,
+            "L": 0,
+            "G": 0
+        }
 
     def ram_read(self, address: int):
         return self.ram[address]
@@ -116,7 +121,46 @@ class CPU:
         self.PC += 1
         reg_num_2 = self.ram_read(self.PC)
         self.alu("ADD", reg_num_1, reg_num_2)
-        
+
+    def CMP(self):
+        # st()
+        self.PC += 1
+        reg_num_1 = self.ram_read(self.PC)
+        self.PC += 1
+        reg_num_2 = self.ram_read(self.PC)
+        self.alu("CMP", reg_num_1, reg_num_2)
+
+    def JMP(self):
+        # st()
+        self.PC += 1
+        reg_num = self.ram_read(self.PC)
+        self.PC = self.reg[reg_num]
+
+    def JEQ(self):
+        # st()
+        self.PC += 1
+        if self.flags["E"]:
+            reg_num = self.ram_read(self.PC)
+            self.PC = self.reg[reg_num]
+        else:
+            self.PC += 1
+
+    def JNE(self):  # jmp reg
+        # st()
+        self.PC += 1
+        if not self.flags["E"]:
+            reg_num = self.ram_read(self.PC)
+            self.PC = self.reg[reg_num]
+        else:
+            self.PC += 1
+
+    # def ADDI(self):
+    #     self.PC += 1
+    #     reg_num = self.ram_read(self.PC)
+    #     self.PC += 1
+    #     value = self.ram_read(self.PC)
+    #     # self.alu("CMP", reg_num_1, reg_num_2)
+    #     # reg_num += value
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
@@ -124,9 +168,38 @@ class CPU:
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
 
+        elif op == "SUB":
+            self.reg[reg_a] -= self.reg[reg_b]
+
         elif op == "MUL":
             self.reg[reg_a] *= self.reg[reg_b]
-        # elif op == "SUB": etc
+
+        elif op == "CMP":
+            self.flags["E"] = int(self.reg[reg_a] == self.reg[reg_b])
+            self.flags["L"] = int(self.reg[reg_a] < self.reg[reg_b])
+            self.flags["G"] = int(self.reg[reg_a] > self.reg[reg_b])
+
+        elif op == "AND":
+            self.reg[reg_a] &= self.reg[reg_b]
+
+        elif op == "OR":
+            self.reg[reg_a] |= self.reg[reg_b]
+
+        elif op == "XOR":
+            self.reg[reg_a] ^= self.reg[reg_b]
+
+        elif op == "NOT":
+            self.reg[reg_a] = ~self.reg[reg_b]
+
+        elif op == "SHL":
+            self.reg[reg_a] = self.reg[reg_b] << 1
+
+        elif op == "SHR":
+            self.reg[reg_a] = self.reg[reg_b] >> 1
+
+        elif op == "MOD":
+            self.reg[reg_a] %= self.reg[reg_b]
+
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -181,7 +254,7 @@ class CPU:
                 self.ADD()
 
                 self.PC += 1
-            
+
             if ir == 0b01000101:
                 self.PUSH()
 
@@ -201,3 +274,23 @@ class CPU:
                 self.RET()
 
                 self.PC += 1
+
+            if ir == 0b10100111:
+                self.CMP()
+
+                self.PC += 1
+
+            if ir == 0b01010100:
+                self.JMP()
+
+                # self.PC += 1
+
+            if ir == 0b01010101:
+                self.JEQ()
+
+                # self.PC += 1
+
+            if ir == 0b01010110:
+                self.JNE()
+
+                # self.PC += 1
