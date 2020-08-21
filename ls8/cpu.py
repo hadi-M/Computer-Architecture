@@ -2,7 +2,7 @@
 
 import sys
 import re
-from ipdb import set_trace as st
+from pudb import set_trace as st
 
 class CPU:
     """Main CPU class."""
@@ -13,7 +13,7 @@ class CPU:
         self.reg = [0] * 8
         self.PC = 0
         self.IR = 0
-        self.SP = 0xff
+        self.SP = 0xff # next empty slot (top of stack)
 
     def ram_read(self, address: int):
         return self.ram[address]
@@ -79,11 +79,29 @@ class CPU:
         self.SP += 1
 
         reg_num = self.ram[self.PC]
-        # top_of_stack_addr = self.reg[self.SP]
         top_of_stack_addr = self.SP
         value = self.ram[top_of_stack_addr]
         self.reg[reg_num] = value
 
+    def CALL(self):
+        self.PC += 1
+
+        reg_num = self.ram[self.PC]
+        subroutine_addr = self.reg[reg_num]
+        
+        # push return addr
+        # ret_addr = self.PC + 1
+        ret_addr = self.PC
+        self.ram[self.SP] = ret_addr
+        self.SP -= 1
+
+        # go to subroutine
+        self.PC = subroutine_addr
+
+    def RET(self):
+        self.SP += 1
+        ret_addr = self.ram[self.SP]
+        self.PC = ret_addr
 
     def MUL(self):
         self.PC += 1
@@ -91,6 +109,14 @@ class CPU:
         self.PC += 1
         reg_num_2 = self.ram_read(self.PC)
         self.alu("MUL", reg_num_1, reg_num_2)
+
+    def ADD(self):
+        self.PC += 1
+        reg_num_1 = self.ram_read(self.PC)
+        self.PC += 1
+        reg_num_2 = self.ram_read(self.PC)
+        self.alu("ADD", reg_num_1, reg_num_2)
+        
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
@@ -131,7 +157,6 @@ class CPU:
             # self.trace()
             ir = self.ram_read(self.PC)
 
-            # st()
             if ir == 0b10000010:
                 self.LDI()
 
@@ -151,6 +176,11 @@ class CPU:
                 self.MUL()
 
                 self.PC += 1
+
+            if ir == 0b10100000:
+                self.ADD()
+
+                self.PC += 1
             
             if ir == 0b01000101:
                 self.PUSH()
@@ -159,5 +189,15 @@ class CPU:
 
             if ir == 0b01000110:
                 self.POP()
+
+                self.PC += 1
+
+            if ir == 0b01010000:
+                # st()
+                self.CALL()
+
+            if ir == 0b00010001:
+                # st()
+                self.RET()
 
                 self.PC += 1
